@@ -6,10 +6,9 @@
  * Licenciado bajo el esquema Academic Free License version 3.0
  *
  * Ejercicio: Muebles de los Alpes
- * 
+ *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
 package com.losalpes.servicios;
 
 import com.losalpes.entities.Vendedor;
@@ -19,8 +18,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
 /**
- * Implementación de los servicios de administración de un vendedor en el sistema
- * 
+ * Implementación de los servicios de administración de un vendedor en el
+ * sistema
+ *
  */
 @Stateless
 public class ServicioVendedoresMock implements IServicioVendedoresMockRemote, IServicioVendedoresMockLocal {
@@ -28,7 +28,6 @@ public class ServicioVendedoresMock implements IServicioVendedoresMockRemote, IS
     //-----------------------------------------------------------
     // Atributos
     //-----------------------------------------------------------
-    
     /**
      * Interface con referencia al servicio de persistencia en el sistema
      */
@@ -38,61 +37,53 @@ public class ServicioVendedoresMock implements IServicioVendedoresMockRemote, IS
     //-----------------------------------------------------------
     // Constructor
     //-----------------------------------------------------------
-
     /**
      * Constructor de la clase sin argumentos
      */
-    public ServicioVendedoresMock()
-    {
+    public ServicioVendedoresMock() {
     }
 
     //-----------------------------------------------------------
     // Métodos
     //-----------------------------------------------------------
-
     /**
      * Agrega un vendedor al sistema
+     *
      * @param vendedor Nuevo vendedor
      * @throws OperacionInvalidaException Excepción lanzada en caso de error
      */
     @Override
-    public void agregarVendedor(Vendedor vendedor) throws OperacionInvalidaException
-    {
-        try
-        {
+    public void agregarVendedor(Vendedor vendedor) throws OperacionInvalidaException {
+        try {
             persistencia.create(vendedor);
-        }
-        catch (OperacionInvalidaException ex)
-        {
+        } catch (OperacionInvalidaException ex) {
             throw new OperacionInvalidaException(ex.getMessage());
         }
     }
 
     /**
      * Elimina un vendedor del sistema dado su ID
+     *
      * @param id Identificador único del vendedor
      * @throws OperacionInvalidaException Excepción lanzada en caso de error
      */
     @Override
-    public void eliminarVendedor(long id) throws OperacionInvalidaException
-    {
-        Vendedor v=(Vendedor) persistencia.findById(Vendedor.class, id);
-        try
-        {
+    public void eliminarVendedor(long id) throws OperacionInvalidaException {
+        Vendedor v = (Vendedor) persistencia.findById(Vendedor.class, id);
+        try {
             persistencia.delete(v);
-        } catch (OperacionInvalidaException ex)
-        {
+        } catch (OperacionInvalidaException ex) {
             throw new OperacionInvalidaException(ex.getMessage());
         }
     }
 
     /**
      * Devuelve todos los vendedores del sistema
+     *
      * @return vendedores Vendedores del sistema
      */
     @Override
-    public List<Vendedor> getVendedores()
-    {
+    public List<Vendedor> getVendedores() {
         return persistencia.findAll(Vendedor.class);
     }
 
