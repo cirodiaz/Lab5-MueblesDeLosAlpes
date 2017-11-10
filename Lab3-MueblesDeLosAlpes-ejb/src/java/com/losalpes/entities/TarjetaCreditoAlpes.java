@@ -28,33 +28,32 @@ import javax.persistence.TemporalType;
 @NamedQueries({
     @NamedQuery(name = "TarjetaCreditoAlpes.findAll", query = "SELECT t FROM TarjetaCreditoAlpes t")
     , @NamedQuery(name = "TarjetaCreditoAlpes.findByNumero", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.numero = :numero")
-    , @NamedQuery(name = "TarjetaCreditoAlpes.findByNombretitular", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.nombretitular = :nombretitular")
-    , @NamedQuery(name = "TarjetaCreditoAlpes.findByNombrebanco", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.nombrebanco = :nombrebanco")
+    , @NamedQuery(name = "TarjetaCreditoAlpes.findByNombretitular", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.nombreTitular = :nombreTitular")
+    , @NamedQuery(name = "TarjetaCreditoAlpes.findByNombrebanco", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.nombreBanco = :nombreBanco")
     , @NamedQuery(name = "TarjetaCreditoAlpes.findByCupo", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.cupo = :cupo")
-    , @NamedQuery(name = "TarjetaCreditoAlpes.findByFechaexpedicion", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.fechaexpedicion = :fechaexpedicion")
-    , @NamedQuery(name = "TarjetaCreditoAlpes.findByFechavencimiento", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.fechavencimiento = :fechavencimiento")})
+    , @NamedQuery(name = "TarjetaCreditoAlpes.findByFechaexpedicion", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.fechaExpedicion = :fechaExpedicion")
+    , @NamedQuery(name = "TarjetaCreditoAlpes.findByFechavencimiento", query = "SELECT t FROM TarjetaCreditoAlpes t WHERE t.fechaVencimiento = :fechaVencimiento")})
 public class TarjetaCreditoAlpes implements Serializable {
 
     //-----------------------------------------------------------
     // Atributos
     //-----------------------------------------------------------
-    
     @Id
-    private String numero;    
-    
-    private String nombreTitular;    
-   
+    private String numero;
+
+    private String nombreTitular;
+
     private String nombreBanco;
-    
-    private long cupo;    
-    
+
+    private double cupo;
+
     @Temporal(TemporalType.DATE)
-    private Date fechaExpedicion;    
-    
+    private Date fechaExpedicion;
+
     @Temporal(TemporalType.DATE)
     private Date fechaVencimiento;
 
-     //-----------------------------------------------------------
+    //-----------------------------------------------------------
     // Constructor
     //-----------------------------------------------------------
     /**
@@ -106,11 +105,11 @@ public class TarjetaCreditoAlpes implements Serializable {
         this.nombreBanco = nombreBanco;
     }
 
-    public long getCupo() {
+    public double getCupo() {
         return cupo;
     }
 
-    public void setCupo(long cupo) {
+    public void setCupo(double cupo) {
         this.cupo = cupo;
     }
 
@@ -129,5 +128,5 @@ public class TarjetaCreditoAlpes implements Serializable {
     public void setFechaVencimiento(Date fechaVencimiento) {
         this.fechaVencimiento = fechaVencimiento;
     }
-    
+
 }

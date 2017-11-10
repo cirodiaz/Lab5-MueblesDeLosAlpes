@@ -31,7 +31,7 @@ public class PersistenciaBMTTest {
      * Interface con referencia al servicio de vendedores en el sistema
      */
     private IPersistenciaBMTRemote persistenciaBMT;
-    
+
     /**
      * Interface con referencia al servicio de persistencia del sistema
      */
@@ -67,7 +67,7 @@ public class PersistenciaBMTTest {
      * Método de prueba para agregar un vendedor al sistema
      */
     @Test
-    public void testInsertRemoteDatabase() throws Exception {      
+    public void testInsertRemoteDatabase() throws Exception {
         // Se inicializa un nuevo vendedor
         Vendedor vendedorNuevo = new Vendedor();
         vendedorNuevo.setNombres("Javier");
@@ -77,12 +77,12 @@ public class PersistenciaBMTTest {
         vendedorNuevo.setComisionVentas(200000.0);
         vendedorNuevo.setIdentificacion(12345);
         vendedorNuevo.setSalario(12000000.0);
-        persistenciaBMT.insertRemoteDatabase(vendedorNuevo);        
-        
+        persistenciaBMT.insertRemoteDatabase(vendedorNuevo);
+
         // Se obtiene el vendedor ingresado anteriormente
-        Vendedor vendedorConsultado = (Vendedor)servicioPersistencia.findById(Vendedor.class, 12345L);
+        Vendedor vendedorConsultado = (Vendedor) servicioPersistencia.findById(Vendedor.class, 12345L);
         Assert.assertEquals(12345L, vendedorConsultado.getIdentificacion());
-               
+
     }
 
     /**
@@ -91,11 +91,11 @@ public class PersistenciaBMTTest {
     @Test
     public void testDeleteRemoteDatabase() throws Exception {
         // Se obtiene el vendedor para eliminar
-        Vendedor vendedorEliminar = (Vendedor)servicioPersistencia.findById(Vendedor.class, 1L);
+        Vendedor vendedorEliminar = (Vendedor) servicioPersistencia.findById(Vendedor.class, 1L);
         persistenciaBMT.deleteRemoteDatabase(vendedorEliminar);
-        
+
         // Se verifica que el cliente se halla eliminado
-        Vendedor vendedorConsultado = (Vendedor)servicioPersistencia.findById(Vendedor.class, 1L);
+        Vendedor vendedorConsultado = (Vendedor) servicioPersistencia.findById(Vendedor.class, 1L);
         Assert.assertEquals(null, vendedorConsultado);
     }
 

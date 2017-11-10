@@ -3,10 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/test/com/losalpes/servicios/PersistenciaCMTTest.java</file>
             <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/servicios/PersistenciaCMT.java</file>
-            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/entities/Ciudad.java</file>
-            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/setup/glassfish-resources.xml</file>
-            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/servicios/ServicioSeguridadMock.java</file>
+            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/conf/persistence.xml</file>
+            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/entities/Vendedor.java</file>
+            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/entities/Usuario.java</file>
+            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/servicios/ServicioPersistencia.java</file>
         </group>
     </open-files>
 </project-private>

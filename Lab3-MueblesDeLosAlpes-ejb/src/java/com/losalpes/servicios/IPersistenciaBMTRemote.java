@@ -20,22 +20,26 @@ import javax.ejb.Remote;
  */
 @Remote
 public interface IPersistenciaBMTRemote {
- /**
+
+    /**
      * Agrega un vendedor al sistema
+     *
      * @param vendedor Nuevo vendedor
      */
     public void insertRemoteDatabase(Vendedor vendedor);
-    
+
     /**
      * Elimina un vendedor del sistema
+     *
      * @param vendedor Vendedor a eliminar
      */
     public void deleteRemoteDatabase(Vendedor vendedor);
-    
+
     /**
      * Realiza la compra de los items que se encuentran en el carrito
+     *
      * @param usuario Usuario que realiza la compra
      */
-    public void comprar (Usuario usuario);    
-    
+    public void comprar(Usuario usuario);
+
 }

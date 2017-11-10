@@ -11,8 +11,10 @@
  */
 package com.losalpes.servicios;
 
+import com.losalpes.entities.Mueble;
 import com.losalpes.entities.Usuario;
 import com.losalpes.entities.Vendedor;
+import java.util.ArrayList;
 import javax.ejb.Local;
 
 /**
@@ -20,22 +22,26 @@ import javax.ejb.Local;
  */
 @Local
 public interface IPersistenciaCMTLocal {
- /**
+
+    /**
      * Agrega un vendedor al sistema
+     *
      * @param vendedor Nuevo vendedor
      */
     public void insertRemoteDatabase(Vendedor vendedor);
-    
+
     /**
      * Elimina un vendedor del sistema
+     *
      * @param vendedor Vendedor a eliminar
      */
     public void deleteRemoteDatabase(Vendedor vendedor);
-    
+
     /**
      * Realiza la compra de los items que se encuentran en el carrito
+     *
      * @param usuario Usuario que realiza la compra
      */
-    public void comprar (Usuario usuario);   
-    
+    public void comprar(ArrayList<Mueble> muebles, Usuario usuario);
+
 }

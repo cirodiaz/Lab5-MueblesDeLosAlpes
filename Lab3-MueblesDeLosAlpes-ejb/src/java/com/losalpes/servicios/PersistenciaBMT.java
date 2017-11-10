@@ -8,7 +8,6 @@
  * Ejercicio: Muebles de los Alpes
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
 package com.losalpes.servicios;
 
 import com.losalpes.entities.Mueble;
@@ -44,21 +43,19 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
     //-----------------------------------------------------------
     // Atributos
     //-----------------------------------------------------------
-    
-    
     @Resource
     private UserTransaction userTransaction;
-    
+
     /**
      * La entidad encargada de persistir en la base de datos
      */
-    @PersistenceContext(unitName="Lab3-MueblesDeLosAlpes-ejbPU")
+    @PersistenceContext(unitName = "Lab3-MueblesDeLosAlpes-ejbPU")
     private EntityManager entity;
-    
+
     /**
      * Interface con referencia al servicio de persistencia en el sistema
      */
-     @EJB
+    @EJB
     private IServicioPersistenciaMockLocal persistencia;
 
     /**
@@ -128,34 +125,35 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
     //-----------------------------------------------------------
     // Métodos
     //-----------------------------------------------------------
-    
     /**
      * Agrega un vendedor al sistema
+     *
      * @param vendedor Nuevo vendedor
      */
     @Override
     public void insertRemoteDatabase(Vendedor vendedor) {
         try {
-            userTransaction.begin();            
+            userTransaction.begin();
             persistencia.create(vendedor);
             userTransaction.commit();
-        }  catch (OperacionInvalidaException | IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
+        } catch (OperacionInvalidaException | IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
             try {
                 userTransaction.rollback();
             } catch (IllegalStateException | SecurityException | SystemException ex) {
                 Logger.getLogger(PersistenciaBMT.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } 
+        }
     }
-     
-     /**
+
+    /**
      * Elimina un vendedor del sistema
+     *
      * @param vendedor Vendedor a eliminar
      */
     @Override
-    public void deleteRemoteDatabase(Vendedor vendedor) {         
+    public void deleteRemoteDatabase(Vendedor vendedor) {
         try {
-            userTransaction.begin(); 
+            userTransaction.begin();
             Vendedor v = (Vendedor) persistencia.findById(Vendedor.class, vendedor.getIdentificacion());
             persistencia.delete(v);
             userTransaction.commit();
@@ -165,29 +163,29 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
             } catch (IllegalStateException | SecurityException | SystemException ex) {
                 Logger.getLogger(PersistenciaBMT.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } 
+        }
     }
-    
+
     /**
      * Realiza la compra de los items que se encuentran en el carrito
+     *
      * @param usuario Usuario que realiza la compra
      */
     @Override
     public void comprar(Usuario usuario) {
         Mueble mueble;
-        for (int i = 0; i < inventario.size(); i++)
-        {
+        for (int i = 0; i < inventario.size(); i++) {
             mueble = inventario.get(i);
-            Mueble editar=(Mueble) persistencia.findById(Mueble.class, mueble.getReferencia());
-            editar.setCantidad(editar.getCantidad()-mueble.getCantidad());
-            RegistroVenta compra=new RegistroVenta(new Date(System.currentTimeMillis()), mueble, mueble.getCantidad(), null, usuario);
+            Mueble editar = (Mueble) persistencia.findById(Mueble.class, mueble.getReferencia());
+            editar.setCantidad(editar.getCantidad() - mueble.getCantidad());
+            RegistroVenta compra = new RegistroVenta(new Date(System.currentTimeMillis()), mueble, mueble.getCantidad(), null, usuario);
             usuario.agregarRegistro(compra);
 
             persistencia.update(usuario);
             persistencia.update(editar);
         }
         limpiarLista();
-    
+
     }
 
     public void agregarItem(Mueble mueble) {
@@ -254,12 +252,11 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
             totalUnidades += item.getCantidad();
         }
     }
-    
+
     /**
      * Limpia el carrito de compras
      */
-    public void limpiarLista()
-    {
+    public void limpiarLista() {
         inventario.clear();
     }
 
