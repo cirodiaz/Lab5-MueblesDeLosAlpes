@@ -34,20 +34,19 @@ import javax.persistence.PersistenceContext;
  */
 @Stateless
 @TransactionManagement(TransactionManagementType.CONTAINER)
-public class PersistenciaCMT implements  Serializable {
+public class PersistenciaCMT implements IPersistenciaCMTLocal, IPersistenciaCMTRemote {
 
     //-----------------------------------------------------------
     // Atributos
     //-----------------------------------------------------------
     
     @Resource
-    private SessionContext context;
-    
+    private SessionContext context;    
     
     /**
      * La entidad encargada de persistir en la base de datos
      */
-    @PersistenceContext
+    @PersistenceContext(unitName="Lab3-MueblesDeLosAlpes-ejbPU")
     private EntityManager entity;
     
     /**
@@ -123,29 +122,42 @@ public class PersistenciaCMT implements  Serializable {
     //-----------------------------------------------------------
     // Métodos
     //-----------------------------------------------------------
+    
+    /**
+     * Agrega un vendedor al sistema
+     * @param vendedor Nuevo vendedor
+     */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    @Override
     public void insertRemoteDatabase(Vendedor vendedor) {
-
-        try {
+        try {            
             persistencia.create(vendedor);
         } catch (OperacionInvalidaException ex) {
+            System.out.println("error");
             context.setRollbackOnly();
         }
     }
 
+    /**
+     * Elimina un vendedor del sistema
+     * @param vendedor Vendedor a eliminar
+     */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteRemoteDatabase(Vendedor vendedor) {
-         Vendedor v = (Vendedor) persistencia.findById(Vendedor.class, vendedor.getIdentificacion());
+    @Override
+    public void deleteRemoteDatabase(Vendedor vendedor) {         
         try {
+            Vendedor v = (Vendedor) persistencia.findById(Vendedor.class, vendedor.getIdentificacion());
             persistencia.delete(v);
         } catch (OperacionInvalidaException ex) {
             context.setRollbackOnly();
-        }
-    
-    
+        }    
     }
 
-    
+    /**
+     * Realiza la compra de los items que se encuentran en el carrito
+     * @param usuario Usuario que realiza la compra
+     */
+    @Override
     public void comprar(Usuario usuario) {
         Mueble mueble;
         for (int i = 0; i < inventario.size(); i++)
@@ -235,5 +247,6 @@ public class PersistenciaCMT implements  Serializable {
     {
         inventario.clear();
     }
+
 
 }

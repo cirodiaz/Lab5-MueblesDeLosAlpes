@@ -32,7 +32,7 @@ public class ServicioPersistencia implements IServicioPersistenciaMockLocal,ISer
     /**
      * La entidad encargada de persistir en la base de datos
      */
-    @PersistenceContext
+    @PersistenceContext(unitName="Lab3-MueblesDeLosAlpes-ejbPU")
     private EntityManager entity;
 
     //-----------------------------------------------------------
@@ -90,7 +90,6 @@ public class ServicioPersistencia implements IServicioPersistenciaMockLocal,ISer
     @Override
     public List findAll(Class c)
     {
-
         return entity.createQuery("select O from " + c.getSimpleName() + " as O").getResultList();
     }
 

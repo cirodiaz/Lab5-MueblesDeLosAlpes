@@ -11,6 +11,7 @@
  */
 package com.losalpes.entities;
 
+import java.io.Serializable;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -29,7 +30,7 @@ import javax.persistence.OneToMany;
 		@NamedQuery(name = "Pais.findCiudadesPorPais", 
 				query = "select p.ciudades from Pais p where p.nombre=:pais")
 })        
-public class Pais {
+public class Pais implements Serializable{
 
     //-----------------------------------------------------------
     // Atributos

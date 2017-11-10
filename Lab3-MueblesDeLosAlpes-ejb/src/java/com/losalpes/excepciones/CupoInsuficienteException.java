@@ -12,10 +12,13 @@
 
 package com.losalpes.excepciones;
 
+import javax.ejb.ApplicationException;
+
 /**
- * Clase de excepción que se presenta cuando se viola alguna restricción de unicidad en el modelo.
+ * Clase de excepción que se presenta cuando el cliente no tiene suficiente cupo en la tarjeta.
  * 
  */
+@ApplicationException( rollback= true )
 public class CupoInsuficienteException extends Exception
 {
 

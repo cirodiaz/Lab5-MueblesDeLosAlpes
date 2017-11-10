@@ -15,27 +15,44 @@ import com.losalpes.entities.Mueble;
 import com.losalpes.entities.RegistroVenta;
 import com.losalpes.entities.Usuario;
 import com.losalpes.entities.Vendedor;
-import java.io.Serializable;
+import com.losalpes.excepciones.OperacionInvalidaException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 
 /**
  * Implementación de los servicios de persistencia
  */
 @Stateless
-public class PersistenciaBMT implements Serializable {
+@TransactionManagement(TransactionManagementType.BEAN)
+public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTRemote {
 
     //-----------------------------------------------------------
     // Atributos
     //-----------------------------------------------------------
+    
+    
+    @Resource
+    private UserTransaction userTransaction;
+    
     /**
      * La entidad encargada de persistir en la base de datos
      */
-    @PersistenceContext
+    @PersistenceContext(unitName="Lab3-MueblesDeLosAlpes-ejbPU")
     private EntityManager entity;
     
     /**
@@ -112,16 +129,50 @@ public class PersistenciaBMT implements Serializable {
     // Métodos
     //-----------------------------------------------------------
     
+    /**
+     * Agrega un vendedor al sistema
+     * @param vendedor Nuevo vendedor
+     */
+    @Override
     public void insertRemoteDatabase(Vendedor vendedor) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            userTransaction.begin();            
+            persistencia.create(vendedor);
+            userTransaction.commit();
+        }  catch (OperacionInvalidaException | IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
+            try {
+                userTransaction.rollback();
+            } catch (IllegalStateException | SecurityException | SystemException ex) {
+                Logger.getLogger(PersistenciaBMT.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } 
     }
-
-    
-    public void deleteRemoteDatabase(Vendedor vendedor) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+     
+     /**
+     * Elimina un vendedor del sistema
+     * @param vendedor Vendedor a eliminar
+     */
+    @Override
+    public void deleteRemoteDatabase(Vendedor vendedor) {         
+        try {
+            userTransaction.begin(); 
+            Vendedor v = (Vendedor) persistencia.findById(Vendedor.class, vendedor.getIdentificacion());
+            persistencia.delete(v);
+            userTransaction.commit();
+        } catch (NotSupportedException | OperacionInvalidaException | IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | RollbackException | SystemException e) {
+            try {
+                userTransaction.rollback();
+            } catch (IllegalStateException | SecurityException | SystemException ex) {
+                Logger.getLogger(PersistenciaBMT.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } 
     }
-
     
+    /**
+     * Realiza la compra de los items que se encuentran en el carrito
+     * @param usuario Usuario que realiza la compra
+     */
+    @Override
     public void comprar(Usuario usuario) {
         Mueble mueble;
         for (int i = 0; i < inventario.size(); i++)

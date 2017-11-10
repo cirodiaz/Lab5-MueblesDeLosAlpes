@@ -13,6 +13,7 @@ package com.losalpes.servicios;
 
 import com.losalpes.entities.Vendedor;
 import com.losalpes.excepciones.OperacionInvalidaException;
+import java.io.Serializable;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -23,7 +24,7 @@ import javax.ejb.Stateless;
  *
  */
 @Stateless
-public class ServicioVendedoresMock implements IServicioVendedoresMockRemote, IServicioVendedoresMockLocal {
+public class ServicioVendedoresMock implements IServicioVendedoresMockRemote, IServicioVendedoresMockLocal, Serializable {
 
     //-----------------------------------------------------------
     // Atributos
@@ -54,7 +55,7 @@ public class ServicioVendedoresMock implements IServicioVendedoresMockRemote, IS
      */
     @Override
     public void agregarVendedor(Vendedor vendedor) throws OperacionInvalidaException {
-        try {
+        try {  
             persistencia.create(vendedor);
         } catch (OperacionInvalidaException ex) {
             throw new OperacionInvalidaException(ex.getMessage());
