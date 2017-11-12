@@ -12,6 +12,7 @@
 package com.losalpes.servicios;
 
 import com.losalpes.entities.Mueble;
+import com.losalpes.entities.TarjetaCreditoAlpes;
 import com.losalpes.entities.TipoMueble;
 import com.losalpes.entities.TipoUsuario;
 import com.losalpes.entities.Usuario;
@@ -40,9 +41,14 @@ public class PersistenciaBMTTest {
     private IPersistenciaBMTRemote persistenciaBMT;
 
     /**
-     * Interface con referencia al servicio de persistencia del sistema
+     * Interface con referencia al servicio de persistencia de la base de datos oracle
      */
-    private IServicioPersistenciaMockRemote servicioPersistencia;
+    private IServicioPersistenciaMockRemote servicioPersistenciaOracle;
+    
+    /**
+     * Interface con referencia al servicio de persistencia de la base de datos derby
+     */
+    private IServicioPersistenciaDerbyMockRemote servicioPersistenciaDerby;
 
     //-----------------------------------------------------------
     // Métodos de inicialización y terminación
@@ -62,7 +68,8 @@ public class PersistenciaBMTTest {
             InitialContext contexto;
             contexto = new InitialContext(env);
             persistenciaBMT = (IPersistenciaBMTRemote) contexto.lookup("com.losalpes.servicios.IPersistenciaBMTRemote");
-            servicioPersistencia = (IServicioPersistenciaMockRemote) contexto.lookup("com.losalpes.servicios.IServicioPersistenciaMockRemote");
+            servicioPersistenciaOracle = (IServicioPersistenciaMockRemote) contexto.lookup("com.losalpes.servicios.IServicioPersistenciaMockRemote");
+            servicioPersistenciaDerby = (IServicioPersistenciaDerbyMockRemote) contexto.lookup("com.losalpes.servicios.IServicioPersistenciaDerbyMockRemote");
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
@@ -78,7 +85,7 @@ public class PersistenciaBMTTest {
     @Test
     public void testInsertRemoteDatabase() throws Exception {
         // Obtenemos el id del último vendedor ingresado
-        List<Vendedor> vendedores = servicioPersistencia.findAll(Vendedor.class);
+        List<Vendedor> vendedores = servicioPersistenciaOracle.findAll(Vendedor.class);
         idVendedorViejo = vendedores.get(vendedores.size()-1).getIdentificacion();
         idVendedorNuevo = idVendedorViejo + 1;   
         
@@ -96,7 +103,7 @@ public class PersistenciaBMTTest {
         persistenciaBMT.insertRemoteDatabase(vendedorNuevo);
 
         // Se obtiene el vendedor ingresado anteriormente
-        Vendedor vendedorConsultado = (Vendedor) servicioPersistencia.findById(Vendedor.class, idVendedorNuevo);
+        Vendedor vendedorConsultado = (Vendedor) servicioPersistenciaOracle.findById(Vendedor.class, idVendedorNuevo);
         Assert.assertEquals(idVendedorNuevo, vendedorConsultado.getIdentificacion());
 
     }
@@ -108,12 +115,12 @@ public class PersistenciaBMTTest {
     @Test
     public void testDeleteRemoteDatabase() throws Exception {
         // Se obtiene el vendedor para eliminar
-        idVendedorViejo = ((Vendedor)servicioPersistencia.findAll(Vendedor.class).get(0)).getIdentificacion();
-        Vendedor vendedorEliminar = (Vendedor) servicioPersistencia.findById(Vendedor.class, idVendedorViejo);
+        idVendedorViejo = ((Vendedor)servicioPersistenciaOracle.findAll(Vendedor.class).get(0)).getIdentificacion();
+        Vendedor vendedorEliminar = (Vendedor) servicioPersistenciaOracle.findById(Vendedor.class, idVendedorViejo);
         persistenciaBMT.deleteRemoteDatabase(vendedorEliminar);
 
         // Se verifica que el cliente se halla eliminado
-        Vendedor vendedorConsultado = (Vendedor) servicioPersistencia.findById(Vendedor.class, idVendedorViejo);
+        Vendedor vendedorConsultado = (Vendedor) servicioPersistenciaOracle.findById(Vendedor.class, idVendedorViejo);
         Assert.assertEquals(null, vendedorConsultado);
     }
 
@@ -122,7 +129,15 @@ public class PersistenciaBMTTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testComprar() throws Exception {        
+    public void testComprar() throws Exception {   
+        
+        // Cliente del sistema
+        Usuario cliente = new Usuario("client", "clientclient", TipoUsuario.Cliente);   
+        
+        // Se consulta el saldo actual de la tarjeta
+        TarjetaCreditoAlpes tarjetaAnterior = (TarjetaCreditoAlpes) servicioPersistenciaDerby.findById(TarjetaCreditoAlpes.class, "123456");
+        double saldoTarjetaAnterior = tarjetaAnterior.getCupo();
+        
         //Agrega los muebles del sistema a la lista del carrito de compras
         ArrayList<Mueble> muebles = new ArrayList<>();        
         muebles.add(new Mueble(1, "Silla clásica", "Una confortable silla con estilo del siglo XIX.", TipoMueble.Interior, 4, "sillaClasica", 100000));
@@ -132,11 +147,14 @@ public class PersistenciaBMTTest {
         muebles.add(new Mueble(5, "Orange games", "Una hermosa silla con un toqué moderno y elegante. Excelente para su sala de estar", TipoMueble.Interior, 7, "sillaNaranja", 300000));
         muebles.add(new Mueble(6, "Cama king", "Una hermosa cama hecha en cedro para dos personas. Sus sueños no volveran a ser iguales.", TipoMueble.Interior, 5, "bed", 600000));
         
-        // Cliente del sistema
-        Usuario cliente = new Usuario("client", "clientclient", TipoUsuario.Cliente);        
-         
+        // Se realiza la compra 
         persistenciaBMT.comprar(muebles, cliente);
         
-        Assert.assertEquals(0, 0);
+        // Se consulta el saldo nuevo de la tarjeta
+        TarjetaCreditoAlpes tarjetaNuevo = (TarjetaCreditoAlpes) servicioPersistenciaDerby.findById(TarjetaCreditoAlpes.class, "123456");
+        double saldoTarjetaNuevo = tarjetaNuevo.getCupo();
+        
+        // Se verifica que se haya realizado la compra
+        Assert.assertEquals(false, saldoTarjetaAnterior == saldoTarjetaNuevo);        
     }
 }
