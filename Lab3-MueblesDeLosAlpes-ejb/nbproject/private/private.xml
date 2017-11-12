@@ -5,10 +5,7 @@
         <group>
             <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/test/com/losalpes/servicios/PersistenciaCMTTest.java</file>
             <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/servicios/PersistenciaCMT.java</file>
-            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/conf/persistence.xml</file>
-            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/entities/Vendedor.java</file>
-            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/entities/Usuario.java</file>
-            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/servicios/ServicioPersistencia.java</file>
+            <file>file:/C:/Users/jaher/Desktop/Lab5-MueblesDeLosAlpes/Lab3-MueblesDeLosAlpes-ejb/src/java/com/losalpes/servicios/PersistenciaBMT.java</file>
         </group>
     </open-files>
 </project-private>

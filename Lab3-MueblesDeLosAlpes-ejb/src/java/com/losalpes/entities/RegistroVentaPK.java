@@ -81,9 +81,6 @@ public class RegistroVentaPK implements Serializable{
         }
         return true;
     }
-   
-     
-    
-    
+        
     
 }

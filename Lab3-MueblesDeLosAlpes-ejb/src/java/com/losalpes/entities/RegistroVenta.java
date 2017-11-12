@@ -50,9 +50,6 @@ public class RegistroVenta implements Serializable {
     // Atributos
     //-----------------------------------------------------------
     
-    //@Id
-    //private Long id;
-    
     /**
      * Fecha en la que se vendió el producto
      */
@@ -208,14 +205,5 @@ public class RegistroVenta implements Serializable {
     public void setComprador(Usuario comprador) {
         this.comprador = comprador;
     }
-
-    /*public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-    */
 
 }

@@ -12,8 +12,10 @@ package com.losalpes.servicios;
 
 import com.losalpes.entities.Mueble;
 import com.losalpes.entities.RegistroVenta;
+import com.losalpes.entities.TarjetaCreditoAlpes;
 import com.losalpes.entities.Usuario;
 import com.losalpes.entities.Vendedor;
+import com.losalpes.excepciones.CupoInsuficienteException;
 import com.losalpes.excepciones.OperacionInvalidaException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -22,6 +24,8 @@ import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManager;
@@ -49,30 +53,16 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
     /**
      * La entidad encargada de persistir en la base de datos
      */
-    @PersistenceContext(unitName = "Lab3-MueblesDeLosAlpes-ejbPU")
-    private EntityManager entity;
+    @PersistenceContext(unitName = "Lab3-MueblesDeLosAlpes-ejbPU2")
+    private EntityManager entityManagerDerby;
 
     /**
      * Interface con referencia al servicio de persistencia en el sistema
      */
     @EJB
-    private IServicioPersistenciaMockLocal persistencia;
+    private IServicioPersistenciaMockLocal persistenciaOracle;
 
-    /**
-     * Lista con los muebles del carrito
-     */
-    private ArrayList<Mueble> inventario;
-
-    /**
-     * Precio total de todo el inventario
-     */
-    private double precioTotalInventario = 0.0;
-
-    /**
-     * Total de unidades en el inventario del carrito
-     */
-    private int totalUnidades = 0;
-
+   
     //-----------------------------------------------------------
     // Constructor
     //-----------------------------------------------------------
@@ -81,45 +71,6 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
      */
     public PersistenciaBMT() {
 
-    }
-
-    //-----------------------------------------------------------
-    // Getters y setters
-    //-----------------------------------------------------------
-    /**
-     * Devuelve el inventario de muebles que se encuentran en el carrito
-     *
-     * @return inventario Lista con los muebles que se encuentran en el carrito
-     */
-    public ArrayList<Mueble> getInventario() {
-        return inventario;
-    }
-
-    /**
-     * Modifica el inventario del carrito
-     *
-     * @param inventario Nueva lista de muebles
-     */
-    public void setInventario(ArrayList<Mueble> inventario) {
-        this.inventario = inventario;
-    }
-
-    /**
-     * Devuelve el precio total del inventario
-     *
-     * @return precioTotalInventario Precio total del inventario
-     */
-    public double getPrecioTotalInventario() {
-        return precioTotalInventario;
-    }
-
-    /**
-     * Devuelve el cantidad total de unidades en el carrito
-     *
-     * @return totalUnidades Cantidad total de unidades en el carrito
-     */
-    public int getTotalUnidades() {
-        return totalUnidades;
     }
 
     //-----------------------------------------------------------
@@ -134,7 +85,7 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
     public void insertRemoteDatabase(Vendedor vendedor) {
         try {
             userTransaction.begin();
-            persistencia.create(vendedor);
+            persistenciaOracle.create(vendedor);
             userTransaction.commit();
         } catch (OperacionInvalidaException | IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
             try {
@@ -154,8 +105,8 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
     public void deleteRemoteDatabase(Vendedor vendedor) {
         try {
             userTransaction.begin();
-            Vendedor v = (Vendedor) persistencia.findById(Vendedor.class, vendedor.getIdentificacion());
-            persistencia.delete(v);
+            Vendedor v = (Vendedor) persistenciaOracle.findById(Vendedor.class, vendedor.getIdentificacion());
+            persistenciaOracle.delete(v);
             userTransaction.commit();
         } catch (NotSupportedException | OperacionInvalidaException | IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | RollbackException | SystemException e) {
             try {
@@ -166,98 +117,114 @@ public class PersistenciaBMT implements IPersistenciaBMTLocal, IPersistenciaBMTR
         }
     }
 
-    /**
+     /**
      * Realiza la compra de los items que se encuentran en el carrito
      *
-     * @param usuario Usuario que realiza la compra
+     * @param muebles Lista de muebles
+     * @param cliente Cliente que realiza la compra
      */
     @Override
-    public void comprar(Usuario usuario) {
+    public void comprar(ArrayList<Mueble> muebles, Usuario cliente) {       
+                   
+        try {
+            userTransaction.begin();
+            registrarCompra(muebles, cliente);
+            descontarValorCompraTarjeta(muebles, cliente);
+            userTransaction.commit();
+        } catch (OperacionInvalidaException | CupoInsuficienteException |RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException | SystemException | NotSupportedException ex ) {
+            
+            try {
+                System.out.println("Se hace rollback de la transacción");
+                System.out.println(ex);
+                userTransaction.setRollbackOnly();
+            } catch (IllegalStateException | SystemException ex1) {
+                Logger.getLogger(PersistenciaBMT.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+        } 
+    }
+    
+    /**
+     * Descuenta el valor de la compra de la tarjeta del cliente en el sistema
+     * 
+     * @param muebles Listado de muebles de la compra
+     * @param cliente Cliente que realiza la compra
+     * @throws CupoInsuficienteException 
+     */
+    @Override
+    public void descontarValorCompraTarjeta(ArrayList<Mueble> muebles, Usuario cliente)throws CupoInsuficienteException{
+        double valor = calcularValorCompra(muebles);
+        
+        TarjetaCreditoAlpes tarjeta = (TarjetaCreditoAlpes) entityManagerDerby.createNamedQuery("TarjetaCreditoAlpes.findByNombretitular").setParameter("nombreTitular", cliente.getLogin()).getSingleResult();
+       
+        // Se valida que la tarjeta exista
+        if(tarjeta == null){
+            throw new CupoInsuficienteException("La tarjeta no existe!!");
+        }
+        
+        // Se valida el cupo de la tarjeta para realizar la transacción
+        if(tarjeta.getCupo()< valor){
+            throw new CupoInsuficienteException("El cliente no tiene cupo disponible en la tarjeta para realizar la compra.\n"
+            + "En el cupo de la tarjeta tiene: " + tarjeta.getCupo() + " y la compra es de : " + valor);
+        } else {
+            tarjeta.setCupo(tarjeta.getCupo() - valor);
+            entityManagerDerby.merge(tarjeta);
+            System.out.println("Se actualizó el valor del cupo de la tarjeta");
+        }
+    
+    }
+    
+    /**
+     * Calcula el valor total de la compra de los muebles
+     * 
+     * @param muebles Listado con todos los muebles que el cliente va a comprar
+     * @return total Valor de la suma de toda la compra
+     */
+    @Override
+    public double calcularValorCompra(ArrayList<Mueble> muebles){
+        double total = 0d;
+        for (Mueble m : muebles) {
+            total+= m.getCantidad()*m.getPrecio();
+        }
+        return total;        
+    }
+    
+    /**
+     * Registra la compra en el sistema
+     * 
+     * @param muebles Lista de muebles de la compra
+     * @param cliente Cliente que realiza la compra
+     * @throws OperacionInvalidaException 
+     */
+    @Override
+    public void registrarCompra(ArrayList<Mueble> muebles, Usuario cliente) throws OperacionInvalidaException {
         Mueble mueble;
-        for (int i = 0; i < inventario.size(); i++) {
-            mueble = inventario.get(i);
-            Mueble editar = (Mueble) persistencia.findById(Mueble.class, mueble.getReferencia());
-            editar.setCantidad(editar.getCantidad() - mueble.getCantidad());
-            RegistroVenta compra = new RegistroVenta(new Date(System.currentTimeMillis()), mueble, mueble.getCantidad(), null, usuario);
-            usuario.agregarRegistro(compra);
+        
+        Usuario clienteConsultado = (Usuario) persistenciaOracle.findById(Usuario.class, cliente.getLogin());        
+        
+        if (!muebles.isEmpty()) {
+            for (int i = 0; i < muebles.size(); i++) {
+                mueble = muebles.get(i);
+                
+                Mueble editar = (Mueble) persistenciaOracle.findById(Mueble.class, mueble.getReferencia());
 
-            persistencia.update(usuario);
-            persistencia.update(editar);
-        }
-        limpiarLista();
+                if (editar != null) {
+                    editar.setCantidad(editar.getCantidad() - mueble.getCantidad());
+                    RegistroVenta compra = new RegistroVenta(new Date(System.currentTimeMillis()), mueble, mueble.getCantidad(), null, cliente);
+                    clienteConsultado.agregarRegistro(compra);
 
-    }
+                    persistenciaOracle.update(clienteConsultado);
+                    persistenciaOracle.update(editar);
 
-    public void agregarItem(Mueble mueble) {
-        boolean found = false;
-        Mueble item;
-        for (int i = 0, max = inventario.size(); i < max; i++) {
-            item = (Mueble) inventario.get(i);
-            if (item.getReferencia() == mueble.getReferencia()) {
-                item.incrementarCantidad();
-                found = true;
-                break;
+                } else {
+                    throw new OperacionInvalidaException("Mueble no existe.");
+                }
             }
-        }
-
-        // Si el item no se encuentra se agrega al inventario
-        if (!found) {
-            inventario.add(mueble);
-            mueble.incrementarCantidad();
-        }
-
-        // Actualiza el inventario
-        recalcularInventarioTotal();
-    }
-
-    /**
-     * Remueve un mueble del carrito de compra
-     *
-     * @param mueble Mueble a remover
-     * @param removerCero Indica si al ser cero se elimina de la lista
-     */
-    public void removerItem(Mueble mueble, boolean removerCero) {
-
-        Mueble foundItem = null;
-        Mueble item;
-        for (int i = 0, max = inventario.size(); i < max; i++) {
-            item = (Mueble) inventario.get(i);
-            if (item.getReferencia() == mueble.getReferencia()) {
-                item.reducirCantidad();
-                foundItem = item;
-                break;
-            }
-        }
-
-        // Remueve el item si la cantidad es menor o igual a cero
-        if (removerCero && foundItem != null
-                && foundItem.getCantidad() <= 0) {
-            inventario.remove(foundItem);
-        }
-
-        // Actualiza el inventario
-        recalcularInventarioTotal();
-    }
-
-    /**
-     * Recalcula el costo y la cantidad de inventario
-     */
-    public void recalcularInventarioTotal() {
-        precioTotalInventario = 0;
-        totalUnidades = 0;
-        Mueble item;
-        for (int i = 0, max = inventario.size(); i < max; i++) {
-            item = (Mueble) inventario.get(i);
-            precioTotalInventario += item.getPrecio() * item.getCantidad();
-            totalUnidades += item.getCantidad();
+        } else {
+            throw new OperacionInvalidaException("Lista de muebles vacia.");
         }
     }
-
-    /**
-     * Limpia el carrito de compras
-     */
-    public void limpiarLista() {
-        inventario.clear();
-    }
+    
+    
+   
 
 }

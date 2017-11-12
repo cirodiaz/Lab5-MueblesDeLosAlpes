@@ -29,7 +29,6 @@ import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceUnit;
 
 /**
  * Implementación de los servicios de persistencia
@@ -56,8 +55,6 @@ public class PersistenciaCMT implements IPersistenciaCMTLocal, IPersistenciaCMTR
     @EJB
     private IServicioPersistenciaMockLocal persistenciaOracle;
   
-
-
     //-----------------------------------------------------------
     // Constructor
     //-----------------------------------------------------------
@@ -71,12 +68,12 @@ public class PersistenciaCMT implements IPersistenciaCMTLocal, IPersistenciaCMTR
     //-----------------------------------------------------------
     // Métodos
     //-----------------------------------------------------------
+    
     /**
-     * Agrega un vendedor al sistema
-     *
-     * @param vendedor Nuevo vendedor
+     * Crea un nuevo vendedor en el sistema
+     * 
+     * @param vendedor Vendedor nuevo
      */
-   
     @Override
     public void insertRemoteDatabase(Vendedor vendedor) {
         try {
@@ -107,40 +104,60 @@ public class PersistenciaCMT implements IPersistenciaCMTLocal, IPersistenciaCMTR
      * Realiza la compra de los items que se encuentran en el carrito
      *
      * @param muebles Lista de muebles
-     * @param usuario Usuario que realiza la compra
+     * @param cliente Cliente que realiza la compra
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public void comprar(ArrayList<Mueble> muebles, Usuario usuario) {       
+    public void comprar(ArrayList<Mueble> muebles, Usuario cliente) {       
                    
         try {
-            registrarCompra(muebles, usuario);
-            descontarValorCompraTarjeta(muebles, usuario);
+            registrarCompra(muebles, cliente);
+            descontarValorCompraTarjeta(muebles, cliente);
         } catch (OperacionInvalidaException | CupoInsuficienteException ex) {
+            System.out.println("Se hace rollback de la transacción");
+            System.out.println(ex);
             context.setRollbackOnly();
         }
     }
     
+    /**
+     * Descuenta el valor de la compra de la tarjeta del cliente en el sistema
+     * 
+     * @param muebles Listado de muebles de la compra
+     * @param cliente Cliente que realiza la compra
+     * @throws CupoInsuficienteException 
+     */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void descontarValorCompraTarjeta(ArrayList<Mueble> muebles, Usuario usuario)throws CupoInsuficienteException{
+    @Override
+    public void descontarValorCompraTarjeta(ArrayList<Mueble> muebles, Usuario cliente)throws CupoInsuficienteException{
         double valor = calcularValorCompra(muebles);
         
-        TarjetaCreditoAlpes tarjeta = (TarjetaCreditoAlpes) entityManagerDerby.createNamedQuery("TarjetaCreditoAlpes.findByNombretitular").setParameter("nombreTitular", usuario.getLogin()).getSingleResult();
+        TarjetaCreditoAlpes tarjeta = (TarjetaCreditoAlpes) entityManagerDerby.createNamedQuery("TarjetaCreditoAlpes.findByNombretitular").setParameter("nombreTitular", cliente.getLogin()).getSingleResult();
+       
+        // Se valida que la tarjeta exista
+        if(tarjeta == null){
+            throw new CupoInsuficienteException("La tarjeta no existe!!");
+        }
         
+        // Se valida el cupo de la tarjeta para realizar la transacción
         if(tarjeta.getCupo()< valor){
-            throw new CupoInsuficienteException("El cliente no tiene cupo disponible en la tarjeta para realizar la compra.");
+            throw new CupoInsuficienteException("El cliente no tiene cupo disponible en la tarjeta para realizar la compra.\n"
+            + "En el cupo de la tarjeta tiene: " + tarjeta.getCupo() + " y la compra es de : " + valor);
         } else {
             tarjeta.setCupo(tarjeta.getCupo() - valor);
             entityManagerDerby.merge(tarjeta);
+            System.out.println("Se actualizó el valor del cupo de la tarjeta");
         }
     
     }
     
     /**
      * Calcula el valor total de la compra de los muebles
+     * 
      * @param muebles Listado con todos los muebles que el cliente va a comprar
      * @return total Valor de la suma de toda la compra
      */
+    @Override
     public double calcularValorCompra(ArrayList<Mueble> muebles){
         double total = 0d;
         for (Mueble m : muebles) {
@@ -149,22 +166,32 @@ public class PersistenciaCMT implements IPersistenciaCMTLocal, IPersistenciaCMTR
         return total;        
     }
     
-    
+    /**
+     * Registra la compra en el sistema
+     * 
+     * @param muebles Lista de muebles de la compra
+     * @param cliente Cliente que realiza la compra
+     * @throws OperacionInvalidaException 
+     */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void registrarCompra(ArrayList<Mueble> muebles, Usuario usuario) throws OperacionInvalidaException {
+    @Override
+    public void registrarCompra(ArrayList<Mueble> muebles, Usuario cliente) throws OperacionInvalidaException {
         Mueble mueble;
-
-        if (muebles.isEmpty()) {
+        
+        Usuario clienteConsultado = (Usuario) persistenciaOracle.findById(Usuario.class, cliente.getLogin());        
+        
+        if (!muebles.isEmpty()) {
             for (int i = 0; i < muebles.size(); i++) {
                 mueble = muebles.get(i);
+                
                 Mueble editar = (Mueble) persistenciaOracle.findById(Mueble.class, mueble.getReferencia());
 
                 if (editar != null) {
                     editar.setCantidad(editar.getCantidad() - mueble.getCantidad());
-                    RegistroVenta compra = new RegistroVenta(new Date(System.currentTimeMillis()), mueble, mueble.getCantidad(), null, usuario);
-                    usuario.agregarRegistro(compra);
+                    RegistroVenta compra = new RegistroVenta(new Date(System.currentTimeMillis()), mueble, mueble.getCantidad(), null, cliente);
+                    clienteConsultado.agregarRegistro(compra);
 
-                    persistenciaOracle.update(usuario);
+                    persistenciaOracle.update(clienteConsultado);
                     persistenciaOracle.update(editar);
 
                 } else {
